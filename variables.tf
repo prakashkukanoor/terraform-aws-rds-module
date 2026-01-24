@@ -14,6 +14,10 @@ variable "team" {
   default = "devops"
 }
 
+variable "db_subnet_group_ids" {
+  type    = list(string)
+}
+
 variable "applications" {
   type = map(object({
     postgress = object({
