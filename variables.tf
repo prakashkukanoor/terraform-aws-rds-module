@@ -14,38 +14,23 @@ variable "team" {
   default = "devops"
 }
 
-variable "db_subnet_group_ids" {
+variable "db_subnet_ids" {
   type    = list(string)
+  default = []
 }
 
 variable "applications" {
   type = map(object({
     postgress = object({
-      db_name = {
-        engine               = string
-        engine_version       = string
-        instance_class       = string
-        username             = string
-        password             = string
-        parameter_group_name = string
-        skip_final_snapshot  = bool
-      }
+      engine         = string
+      engine_version = string
+      instance_class = string
+      username       = string
+      password       = string
+      # parameter_group_name = string
+      skip_final_snapshot = bool
+      db_name             = string
+      identifier          = string
     })
   }))
-  default = {
-    "devops" = {
-      postgress = ["devops-test-db"]
-    }
-  }
-}
-
-variable "rds_config" {
-  type = map(object({
-    postgress = list(string)
-  }))
-  default = {
-    "devops" = {
-      postgress = ["devops-test-db"]
-    }
-  }
 }
