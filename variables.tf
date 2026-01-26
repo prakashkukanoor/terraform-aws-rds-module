@@ -29,7 +29,7 @@ variable "applications" {
       password       = string
       # parameter_group_name = string
       skip_final_snapshot = bool
-      db_name             = string
+      db_names            = list(string)
       identifier          = string
     })
   }))
