@@ -30,7 +30,7 @@ variable "applications" {
       # parameter_group_name = string
       skip_final_snapshot = bool
       db_names            = list(string)
-      identifier          = string
+      # identifier          = string
     })
   }))
 }
