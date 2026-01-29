@@ -27,10 +27,9 @@ variable "applications" {
       instance_class = string
       username       = string
       password       = string
-      # parameter_group_name = string
+      db_family      = string
       skip_final_snapshot = bool
       db_names            = list(string)
-      # identifier          = string
     })
   }))
 }

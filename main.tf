@@ -5,17 +5,14 @@ locals {
     createdBy   = "terraform"
   }
 
-  application_data = flatten([
-    for domain_name, domain_data in var.applications : [
-      can(domain_data.postgress) ? [
-        for db_name in  domain_data.postgress.db_names:
-        { team    = domain_name
-        db_name = db_name
+  application_data = {
+    for domain_name, domain_data in var.applications: 
+    domain_name => {
+        team          = domain_name
         db_identifier = domain_name
-        db_config = domain_data.postgress }
-      ]: []
-    ]
-  ])
+        db_config     = domain_data.postgress
+    } if can(domain_data.postgress)
+}
 }
 
 resource "aws_db_subnet_group" "this" {
@@ -30,19 +27,48 @@ resource "aws_db_subnet_group" "this" {
   )
 }
 
+resource "aws_db_parameter_group" "this" {
+  for_each =  local.application_data
+
+  name_prefix = each.key
+  family      =  each.value.db_config.db_family
+
+  parameter {
+    name  = "log_connections"
+    value = "1"
+  }
+
+  lifecycle {
+    create_before_destroy = true
+  }
+
+  tags = merge(
+    local.common_tags,
+    {
+      Name = "rds-${each.key}-${local.common_tags.environment}"
+    }
+  )
+}
+
 resource "aws_db_instance" "this" {
-  for_each = { for idx, db_obj in local.application_data : "${db_obj.db_name}" => db_obj }
+  for_each =  local.application_data
 
   db_subnet_group_name = aws_db_subnet_group.this.name
   allocated_storage    = 10
 
-  db_name        = each.key
-  identifier     = each.value.db_identifier
+  identifier     = each.key
   engine         = each.value.db_config.engine
   engine_version = each.value.db_config.engine_version
   instance_class = each.value.db_config.instance_class
   username       = each.value.db_config.username
   password       = each.value.db_config.password
-  # parameter_group_name = each.value.db_config.parameter_group_name
+  parameter_group_name = aws_db_parameter_group.this[each.key].name
   skip_final_snapshot = each.value.db_config.skip_final_snapshot
+
+  tags = merge(
+    local.common_tags,
+    {
+      Name = "rds-${each.key}-${local.common_tags.environment}"
+    }
+  )
 }
