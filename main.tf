@@ -15,6 +15,28 @@ locals {
 }
 }
 
+resource "aws_security_group" "allow_db_subnet_traffic" {
+  name = "allow_db_subnet_traffic"
+  vpc_id = var.vpc_id
+
+  tags = merge(
+    local.common_tags,
+    {
+      Name = "allow-dbSubnet-traffic-${local.common_tags.environment}"
+    }
+  )
+}
+
+resource "aws_security_group_rule" "allow_db_subnet_traffic" {
+  type              = "ingress"
+  from_port         = 5432
+  to_port           = 5432
+  protocol          = "tcp"
+  cidr_blocks       = var.db_subnets_ipv4_cidr
+  # ipv6_cidr_blocks  = []
+  security_group_id = aws_security_group.allow_db_subnet_traffic.id
+}
+
 resource "aws_db_subnet_group" "this" {
   name       = "db-subnet-group-${local.common_tags.environment}"
   subnet_ids = var.db_subnet_ids
@@ -37,6 +59,10 @@ resource "aws_db_parameter_group" "this" {
     name  = "log_connections"
     value = "1"
   }
+  # parameter {
+  #   name  = "rds.force_ssl"
+  #   value = "0"
+  # }
 
   lifecycle {
     create_before_destroy = true
@@ -64,6 +90,7 @@ resource "aws_db_instance" "this" {
   password       = each.value.db_config.password
   parameter_group_name = aws_db_parameter_group.this[each.key].name
   skip_final_snapshot = each.value.db_config.skip_final_snapshot
+  vpc_security_group_ids = [aws_security_group.allow_db_subnet_traffic.id]
 
   tags = merge(
     local.common_tags,

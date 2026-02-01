@@ -13,12 +13,17 @@ variable "team" {
   type    = string
   default = "devops"
 }
+variable "vpc_id" {
+  type    = string
+}
 
 variable "db_subnet_ids" {
   type    = list(string)
   default = []
 }
-
+variable "db_subnets_ipv4_cidr" {
+  type    = list(string)
+}
 variable "applications" {
   type = map(object({
     postgress = object({
