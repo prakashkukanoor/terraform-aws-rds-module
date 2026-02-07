@@ -16,6 +16,9 @@ variable "team" {
 variable "vpc_id" {
   type    = string
 }
+variable "allow_eks_nodes_sg_traffic" {
+  type    = string
+}
 
 variable "db_subnet_ids" {
   type    = list(string)

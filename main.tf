@@ -37,6 +37,30 @@ resource "aws_security_group_rule" "allow_db_subnet_traffic" {
   security_group_id = aws_security_group.allow_db_subnet_traffic.id
 }
 
+resource "aws_security_group" "allow_eks_nodes_sg_traffic" {
+  name = "allow_eks_worker_node_traffic"
+  vpc_id = var.vpc_id
+
+  tags = merge(
+    local.common_tags,
+    {
+      Name = "allow-eksWorkerNode-traffic-${local.common_tags.environment}"
+    }
+  )
+}
+
+resource "aws_security_group_rule" "allow_eks_nodes_sg_traffic" {
+  type              = "ingress"
+  from_port         = 5432
+  to_port           = 5432
+  protocol          = "tcp"
+  # cidr_blocks       = var.db_subnets_ipv4_cidr
+  # ipv6_cidr_blocks  = []
+  security_group_id = aws_security_group.allow_eks_nodes_sg_traffic.id
+  source_security_group_id = var.allow_eks_nodes_sg_traffic
+}
+
+
 resource "aws_db_subnet_group" "this" {
   name       = "db-subnet-group-${local.common_tags.environment}"
   subnet_ids = var.db_subnet_ids
@@ -90,7 +114,7 @@ resource "aws_db_instance" "this" {
   password       = each.value.db_config.password
   parameter_group_name = aws_db_parameter_group.this[each.key].name
   skip_final_snapshot = each.value.db_config.skip_final_snapshot
-  vpc_security_group_ids = [aws_security_group.allow_db_subnet_traffic.id]
+  vpc_security_group_ids = [aws_security_group.allow_db_subnet_traffic.id, var.allow_eks_nodes_sg_traffic]
 
   tags = merge(
     local.common_tags,
