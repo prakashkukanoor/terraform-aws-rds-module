@@ -114,7 +114,7 @@ resource "aws_db_instance" "this" {
   password       = each.value.db_config.password
   parameter_group_name = aws_db_parameter_group.this[each.key].name
   skip_final_snapshot = each.value.db_config.skip_final_snapshot
-  vpc_security_group_ids = [aws_security_group.allow_db_subnet_traffic.id, var.allow_eks_nodes_sg_traffic]
+  vpc_security_group_ids = [aws_security_group.allow_db_subnet_traffic.id,  aws_security_group.allow_eks_nodes_sg_traffic.id]
 
   tags = merge(
     local.common_tags,
